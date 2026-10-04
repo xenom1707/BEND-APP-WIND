@@ -12,40 +12,34 @@ jobs:
     runs-on: windows-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Show project files
+      - name: Check Node and NPM
         shell: powershell
         run: |
-          Write-Host "Files in repository:"
-          Get-ChildItem -Recurse
+          node --version
+          npm --version
 
       - name: Check required files
         shell: powershell
         run: |
           if (!(Test-Path "package.json")) {
-            Write-Error "package.json was not found!"
+            Write-Error "package.json not found"
             exit 1
           }
 
           if (!(Test-Path "main.js")) {
-            Write-Error "main.js was not found!"
+            Write-Error "main.js not found"
             exit 1
           }
 
           if (!(Test-Path "app/index.html")) {
-            Write-Error "app/index.html was not found!"
+            Write-Error "app/index.html not found"
             exit 1
           }
 
-          Write-Host "All required files found."
+          Write-Host "All required files found"
 
       - name: Install dependencies
         shell: powershell
@@ -57,11 +51,18 @@ jobs:
         run: |
           npm run dist
 
-      - name: Show build results
+      - name: Check EXE
         shell: powershell
         run: |
-          Write-Host "Build output:"
-          Get-ChildItem -Path "dist" -Recurse
+          Write-Host "Files created:"
+          Get-ChildItem "dist" -Recurse
+
+          $exe = Get-ChildItem "dist\*.exe" -ErrorAction SilentlyContinue
+
+          if (!$exe) {
+            Write-Error "EXE was not created"
+            exit 1
+          }
 
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
