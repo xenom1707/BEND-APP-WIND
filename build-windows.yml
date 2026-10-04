@@ -8,26 +8,62 @@ on:
       - master
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
+
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+
+      - name: Show project files
+        shell: powershell
+        run: |
+          Write-Host "Files in repository:"
+          Get-ChildItem -Recurse
+
+      - name: Check required files
+        shell: powershell
+        run: |
+          if (!(Test-Path "package.json")) {
+            Write-Error "package.json was not found!"
+            exit 1
+          }
+
+          if (!(Test-Path "main.js")) {
+            Write-Error "main.js was not found!"
+            exit 1
+          }
+
+          if (!(Test-Path "app/index.html")) {
+            Write-Error "app/index.html was not found!"
+            exit 1
+          }
+
+          Write-Host "All required files found."
 
       - name: Install dependencies
-        run: npm install
+        shell: powershell
+        run: |
+          npm install
 
       - name: Build Windows EXE
-        run: npm run dist
+        shell: powershell
+        run: |
+          npm run dist
 
-      - name: Upload EXE
+      - name: Show build results
+        shell: powershell
+        run: |
+          Write-Host "Build output:"
+          Get-ChildItem -Path "dist" -Recurse
+
+      - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
         with:
           name: BendCalculator-Windows-EXE
