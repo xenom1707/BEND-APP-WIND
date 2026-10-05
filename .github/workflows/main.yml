@@ -122,39 +122,33 @@ jobs:
       # 5. Create package.json automatically
       # ==========================================
 
-      - name: Create package.json
+           - name: Create package.json
         shell: powershell
         run: |
-          @'
+          $packageJson = @'
           {
             "name": "bend-calculator",
-            "version": "4.0.0",
+            "version": "4.0.1",
             "description": "Sheet Metal Bend Calculator",
+            "author": "Shivanov",
             "main": "main.js",
-
             "scripts": {
               "start": "electron .",
               "dist": "electron-builder --win portable"
             },
-
             "devDependencies": {
               "electron": "33.4.11",
               "electron-builder": "25.1.8"
             },
-
             "build": {
               "appId": "com.shivanov.bendcalculator",
-
               "productName": "Bend Calculator",
-
               "asar": true,
-
               "files": [
                 "index.html",
                 "main.js",
                 "package.json"
               ],
-
               "win": {
                 "target": [
                   {
@@ -165,14 +159,23 @@ jobs:
                   }
                 ]
               },
-
               "artifactName": "BendCalculator-Windows-${version}.${ext}"
             }
           }
-          '@ | Set-Content -Path "package.json" -Encoding UTF8
+          '@
 
-          Write-Host "package.json created successfully"
+          [System.IO.File]::WriteAllText(
+              "$PWD\package.json",
+              $packageJson,
+              [System.Text.UTF8Encoding]::new($false)
+          )
 
+          Write-Host "package.json created as UTF-8 without BOM"
+
+          Write-Host "Testing package.json:"
+          Get-Content package.json
+
+          node -e "JSON.parse(require('fs').readFileSync('package.json','utf8')); console.log('package.json VALID')"
 
       # ==========================================
       # 6. Verify generated project
