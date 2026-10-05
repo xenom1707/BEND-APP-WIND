@@ -1,9 +1,9 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bend Calculator V3</title><style>
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bend Calculator V4.1</title><style>
 body{font-family:Arial,sans-serif;background:#eef2f6;margin:0;color:#17202a}.wrap{max-width:1150px;margin:18px auto;padding:0 12px}.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 12px #0001}h1,h2{margin:0 0 12px}.muted{color:#667085;font-size:13px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}label{display:block;font-weight:700;font-size:13px;margin-bottom:5px}input,select{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px}button{padding:10px 14px;border:0;border-radius:9px;background:#1769aa;color:white;font-weight:700;cursor:pointer}.alt{background:#667085}.danger{background:#b42318}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.result{font-size:18px;font-weight:700;white-space:pre-line}.good{border-right:6px solid #159447}.warn{border-right:6px solid #e09b18}.hide{display:none}table{width:100%;border-collapse:collapse;direction:ltr}th,td{padding:7px;border-bottom:1px solid #e5e7eb;text-align:center;white-space:nowrap}th{background:#f8fafc;position:sticky;top:0}.userrow{background:#fff8e6}.scroll{overflow:auto;max-height:520px}.badge{padding:2px 7px;border-radius:12px;background:#eef2f6;font-size:12px}@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}.wrap{margin:0;padding:8px}.actions button{flex:1}.scroll{max-height:440px}}@media(max-width:480px){.grid{grid-template-columns:1fr}}@media print{body{background:#fff}.no-print,.calc{display:none!important}.card{box-shadow:none}.scroll{max-height:none;overflow:visible}th{position:static}table{font-size:9pt}}
 </style></head><body><div class="wrap">
-<div class="card"><h1>מחשבון כיפוף + מאגר ניסויים V3</h1><div class="muted">מאגר מקורי + נתונים שאתה מוסיף. הנתונים האישיים נשמרים מקומית במכשיר.</div></div>
+<div class="card"><h1>מחשבון כיפוף + מאגר ניסויים V4.1</h1><div class="muted">מאגר מקורי + נתונים שאתה מוסיף. הנתונים האישיים נשמרים מקומית במכשיר.</div></div>
 <div class="card calc"><h2>מחשבון פריסה</h2><div class="grid"><div><label>חומר</label><select id="mat"></select></div><div><label>עובי T</label><select id="th"></select></div><div><label>רדיוס R</label><select id="rad"></select></div><div><label>זווית</label><select id="ang"></select></div></div><div class="actions"><button onclick="lookup()">מצא נתונים מהמאגר</button></div><div id="answer" class="card warn" style="margin-top:12px"><div id="answerText">בחר נתונים ולחץ חיפוש.</div><div id="matchRows"></div></div><div id="flatBox" class="hide"><div class="grid"><div><label>סכום מידות חיצוניות</label><input id="total" inputmode="decimal"></div><div><label>מספר כיפופים</label><input id="count" type="number" min="1" value="1"></div></div><div class="actions"><button onclick="flatCalc()">חשב פריסה</button></div><div id="flatResult" class="result"></div></div></div>
-<div class="card calc"><h2>Reverse – מציאת BD מחלק קיים</h2><div class="grid"><div><label>חומר</label><select id="revMat"></select></div><div><label>עובי T</label><select id="revT"></select></div><div><label>רדיוס R</label><select id="revR"></select></div><div><label>זווית</label><select id="revA"></select></div><div><label>מספר כיפופים</label><input id="revCount" type="number" min="1" value="1"></div><div><label>פריסה קיימת</label><input id="revFlat" inputmode="decimal"></div><div><label>סכום מידות חיצוניות</label><input id="revOutside" inputmode="decimal"></div></div><div class="actions"><button onclick="reverseLookup()">חשב והשווה למאגר</button></div><div id="reverseResult" class="result" style="margin-top:10px"></div><div id="reverseRows"></div></div>
+<div class="card calc"><h2>Reverse – מציאת BD מחלק קיים</h2><div class="grid"><div><label>חומר</label><select id="revMat"></select></div><div><label>עובי T</label><select id="revT"></select></div><div><label>רדיוס R</label><select id="revR"></select></div><div><label>זווית כיפוף °</label><input id="revA" type="number" inputmode="decimal" min="0.1" max="179.9" step="0.1" value="90" placeholder="לדוגמה 60"></div><div><label>מספר כיפופים</label><input id="revCount" type="number" min="1" value="1"></div><div><label>פריסה קיימת</label><input id="revFlat" inputmode="decimal"></div><div><label>סכום מידות חיצוניות</label><input id="revOutside" inputmode="decimal"></div></div><div class="actions"><button onclick="reverseLookup()">חשב והשווה למאגר</button></div><div id="reverseResult" class="result" style="margin-top:10px"></div><div id="reverseRows"></div></div>
 <div class="card no-print"><h2>הוסף / ערוך ניסוי</h2><input type="hidden" id="editId"><div class="grid"><div><label>חומר</label><select id="aMat"><option value="Steel">ברזל</option><option value="Stainless">נירוסטה</option><option value="Aluminum">אלומיניום</option><option value="Nichrome">ניכרום</option></select></div><div><label>עובי T</label><input id="aT" inputmode="decimal"></div><div><label>זווית °</label><input id="aA" inputmode="decimal" value="90"></div><div><label>רדיוס R</label><input id="aR" inputmode="decimal"></div><div><label>פריזמה V</label><input id="aV" inputmode="decimal"></div><div><label>BD</label><input id="aBD" inputmode="decimal"></div><div><label>תאריך</label><input id="aDate" type="date"></div><div><label>הערה</label><input id="aNote"></div></div><div class="actions"><button onclick="saveRecord()">שמור במאגר</button><button class="alt" onclick="clearForm()">נקה</button></div><div id="saveMsg" class="muted"></div></div>
 <div class="card"><h2>מאגר הנתונים</h2><div class="actions no-print"><button onclick="printDB()">🖨️ הדפס / PDF</button><button onclick="exportCSV()">📊 Excel / CSV</button><button class="alt" onclick="exportBackup()">💾 גיבוי JSON</button><button class="alt" onclick="document.getElementById('importFile').click()">📥 שחזור</button><input id="importFile" class="hide" type="file" accept="application/json" onchange="importBackup(event)"></div><div class="scroll"><table><thead><tr><th>ID</th><th>Material</th><th>T</th><th>Angle</th><th>V</th><th>R</th><th>BD</th><th>Source</th><th>Date</th><th>Note</th><th class="no-print">Actions</th></tr></thead><tbody id="dbRows"></tbody></table></div><div id="dbCount" class="muted"></div></div>
 </div><script>
@@ -170,11 +170,30 @@ function opts(id,a,label=x=>x){let e=$(id);e.innerHTML="";a.forEach(v=>{let o=do
 function filterSet(prefix){let A=all(),m=$(prefix+"Mat").value,t=num($(prefix+"T").value),r=num($(prefix+"R").value);return A.filter(x=>x.material===m&&x.t===t&&x.r===r)}
 function initCalc(){let A=all();opts("mat",uniq(A.map(x=>x.material)),x=>NAMES[x]||x);$("mat").onchange=refreshT;$("th").onchange=refreshR;$("rad").onchange=refreshA;refreshT()}
 function refreshT(){let A=all(),m=$("mat").value;opts("th",uniq(A.filter(x=>x.material===m).map(x=>x.t)),x=>x+" מ״מ");refreshR()}function refreshR(){let A=all(),m=$("mat").value,t=num($("th").value);opts("rad",uniq(A.filter(x=>x.material===m&&x.t===t).map(x=>x.r)),x=>"R"+x);refreshA()}function refreshA(){let A=all(),m=$("mat").value,t=num($("th").value),r=num($("rad").value);opts("ang",uniq(A.filter(x=>x.material===m&&x.t===t&&x.r===r).map(x=>x.angle)),x=>x+"°")}
-function initReverse(){let A=all();opts("revMat",uniq(A.map(x=>x.material)),x=>NAMES[x]||x);$("revMat").onchange=revT;$("revT").onchange=revR;$("revR").onchange=revA;revT()}function revT(){let A=all(),m=$("revMat").value;opts("revT",uniq(A.filter(x=>x.material===m).map(x=>x.t)));revR()}function revR(){let A=all(),m=$("revMat").value,t=num($("revT").value);opts("revR",uniq(A.filter(x=>x.material===m&&x.t===t).map(x=>x.r)),x=>"R"+x);revA()}function revA(){let s=filterSet("rev");opts("revA",uniq(s.map(x=>x.angle)),x=>x+"°")}
+function initReverse(){let A=all();opts("revMat",uniq(A.map(x=>x.material)),x=>NAMES[x]||x);$("revMat").onchange=revT;$("revT").onchange=revR;revT()}function revT(){let A=all(),m=$("revMat").value;opts("revT",uniq(A.filter(x=>x.material===m).map(x=>x.t)));revR()}function revR(){let A=all(),m=$("revMat").value,t=num($("revT").value);opts("revR",uniq(A.filter(x=>x.material===m&&x.t===t).map(x=>x.r)),x=>"R"+x)}
 function rowsTable(rows){if(!rows.length)return "";return '<div class="scroll"><table><thead><tr><th>V</th><th>R</th><th>Angle</th><th>BD</th><th>Source</th><th>Note</th></tr></thead><tbody>'+rows.map(x=>`<tr><td>${x.v}</td><td>${x.r}</td><td>${x.angle}°</td><td><b>${x.bd}</b></td><td>${x.source}</td><td>${esc(x.note||"")}</td></tr>`).join("")+'</tbody></table></div>'}
 function lookup(){let m=$("mat").value,t=num($("th").value),r=num($("rad").value),a=num($("ang").value);let rows=all().filter(x=>x.material===m&&x.t===t&&x.r===r&&x.angle===a).sort((x,y)=>x.v-y.v||x.bd-y.bd);if(!rows.length){$("answerText").textContent="לא נמצאה התאמה.";$("matchRows").innerHTML="";$("flatBox").className="hide";selected=null;return}selected=rows[0];$("answerText").textContent=`נמצאו ${rows.length} רשומות. נבחרה הראשונה: V${selected.v} | R${selected.r} | ${selected.angle}° | BD ${selected.bd} מ״מ`;$("matchRows").innerHTML=rowsTable(rows);$("flatBox").className=""}
 function flatCalc(){if(!selected)return;let total=num($("total").value),c=parseInt($("count").value);if(!Number.isFinite(total)||!c){$("flatResult").textContent="נא להזין נתונים תקינים";return}let d=selected.bd*c;$("flatResult").textContent=`סה״כ הפחתה: ${d.toFixed(3)} מ״מ\nפריסה: ${(total-d).toFixed(3)} מ״מ`}
-function reverseLookup(){let c=parseInt($("revCount").value),flat=num($("revFlat").value),out=num($("revOutside").value);if(!c||!Number.isFinite(flat)||!Number.isFinite(out)){$("reverseResult").textContent="נא להזין מספר כיפופים, פריסה וסכום מידות.";return}let bd=(out-flat)/c,m=$("revMat").value,t=num($("revT").value),r=num($("revR").value),a=num($("revA").value);let rows=all().filter(x=>x.material===m&&x.t===t&&x.r===r&&x.angle===a).sort((x,y)=>Math.abs(x.bd-bd)-Math.abs(y.bd-bd));let best=rows[0];$("reverseResult").textContent=`BD נמדד: ${bd.toFixed(3)} מ״מ`+(best?`\nהכי קרוב במאגר: V${best.v} | BD ${best.bd} | הפרש ${Math.abs(best.bd-bd).toFixed(3)} מ״מ`:"\nאין התאמות במאגר");$("reverseRows").innerHTML=rowsTable(rows)}
+function reverseLookup(){
+let c=parseInt($("revCount").value),flat=num($("revFlat").value),out=num($("revOutside").value),a=num($("revA").value);
+if(!c||!Number.isFinite(flat)||!Number.isFinite(out)||!Number.isFinite(a)||a<=0||a>=180){
+$("reverseResult").textContent="נא להזין מספר כיפופים, פריסה, סכום מידות וזווית בין 0° ל-180°.";
+$("reverseRows").innerHTML="";
+return
+}
+let bd=(out-flat)/c,m=$("revMat").value,t=num($("revT").value),r=num($("revR").value);
+let exact=all().filter(x=>x.material===m&&x.t===t&&x.r===r&&Math.abs(Number(x.angle)-a)<0.001).sort((x,y)=>Math.abs(x.bd-bd)-Math.abs(y.bd-bd));
+let best=exact[0];
+if(best){
+$("reverseResult").textContent=`זווית: ${a}°\nBD נמדד: ${bd.toFixed(3)} מ״מ\nהכי קרוב במאגר: V${best.v} | BD ${best.bd} | הפרש ${Math.abs(best.bd-bd).toFixed(3)} מ״מ`;
+$("reverseRows").innerHTML=rowsTable(exact)
+}else{
+let same=all().filter(x=>x.material===m&&x.t===t&&x.r===r).sort((x,y)=>Math.abs(Number(x.angle)-a)-Math.abs(Number(y.angle)-a)||Math.abs(x.bd-bd)-Math.abs(y.bd-bd));
+let near=same[0];
+$("reverseResult").textContent=`זווית: ${a}°\nBD נמדד: ${bd.toFixed(3)} מ״מ\nאין במאגר נתון אמפירי לזווית ${a}°.`+(near?`\nהזווית הקרובה ביותר במאגר: ${near.angle}° (V${near.v}, BD ${near.bd})`:"");
+$("reverseRows").innerHTML=same.length?rowsTable(same.slice(0,10)):""
+}
+}
 function saveRecord(){let rec={id:$("editId").value||("U"+Date.now()),material:$("aMat").value,t:num($("aT").value),angle:num($("aA").value),r:num($("aR").value),v:num($("aV").value),bd:num($("aBD").value),note:$("aNote").value.trim(),date:$("aDate").value,source:"ניסוי"};if([rec.t,rec.angle,rec.r,rec.v,rec.bd].some(x=>!Number.isFinite(x))){$("saveMsg").textContent="יש למלא T, זווית, R, V ו-BD במספרים תקינים.";return}let u=users(),i=u.findIndex(x=>x.id===rec.id);if(i>=0)u[i]=rec;else u.push(rec);saveUsers(u);$("saveMsg").textContent="הנתון נשמר.";clearForm(false);initAll()}
 function clearForm(msg=true){$("editId").value="";["aT","aR","aV","aBD","aNote"].forEach(id=>$(id).value="");$("aA").value="90";$("aDate").value=new Date().toISOString().slice(0,10);if(msg)$("saveMsg").textContent=""}
 function editRec(id){let x=users().find(r=>r.id===id);if(!x)return;$("editId").value=x.id;$("aMat").value=x.material;$("aT").value=x.t;$("aA").value=x.angle;$("aR").value=x.r;$("aV").value=x.v;$("aBD").value=x.bd;$("aNote").value=x.note||"";$("aDate").value=x.date||"";window.scrollTo({top:document.body.scrollHeight/2,behavior:"smooth"})}
@@ -185,6 +204,29 @@ function printDB(){window.print()}
 function csvText(){let R=[["ID","Material","Thickness_mm","Angle_deg","V_mm","R_mm","BD_mm","Source","Date","Note"]];all().forEach(x=>R.push([x.id,NAMES[x.material]||x.material,x.t,x.angle,x.v,x.r,x.bd,x.source,x.date||"",x.note||""]));return R.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n")}
 function download(name,type,text){let b=new Blob([text],{type}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function exportCSV(){download("bend_database.csv","text/csv;charset=utf-8","\ufeff"+csvText())} function exportBackup(){download("bend_database_backup.json","application/json;charset=utf-8",JSON.stringify(users(),null,2))}
+
+function chooseBackupFile(){
+  if (window.Android && typeof Android.openJsonFile === "function") {
+    Android.openJsonFile();
+  } else {
+    document.getElementById("importFile").click();
+  }
+}
+
+function importBackupText(text){
+  try{
+    const a = JSON.parse(text);
+    if(!Array.isArray(a)) throw Error();
+    if(confirm(`לשחזר ${a.length} רשומות?`)){
+      saveUsers(a);
+      initAll();
+      alert("השחזור הושלם.");
+    }
+  }catch(e){
+    alert("קובץ גיבוי לא תקין");
+  }
+}
+
 function importBackup(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let a=JSON.parse(r.result);if(!Array.isArray(a))throw Error();if(confirm(`לשחזר ${a.length} רשומות?`)){saveUsers(a);initAll()}}catch(_){alert("קובץ גיבוי לא תקין")}};r.readAsText(f);e.target.value=""}
 function initAll(){initCalc();initReverse();renderDB();if(!$("aDate").value)$("aDate").value=new Date().toISOString().slice(0,10)} document.addEventListener("DOMContentLoaded",initAll);
 </script></body></html>
