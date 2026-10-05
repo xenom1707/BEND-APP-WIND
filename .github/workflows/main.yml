@@ -1,4 +1,4 @@
-name: Build Bend Calculator Windows
+name: Build Windows EXE
 
 on:
   workflow_dispatch:
@@ -13,55 +13,56 @@ jobs:
 
     steps:
 
-      # ==========================================
-      # 1. Download repository
-      # ==========================================
+      # ==============================
+      # Checkout
+      # ==============================
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
 
-      # ==========================================
-      # 2. Check index.html
-      # ==========================================
+      # ==============================
+      # Check index.html
+      # ==============================
 
       - name: Check index.html
         shell: powershell
         run: |
-          Write-Host "Checking repository files..."
+          Write-Host "Checking repository..."
 
           Get-ChildItem
 
           if (!(Test-Path "index.html")) {
-              Write-Error "ERROR: index.html was not found in repository root"
+              Write-Error "ERROR: index.html was not found"
               exit 1
           }
 
           Write-Host "SUCCESS: index.html found"
 
 
-      # ==========================================
-      # 3. Check Node / NPM
-      # ==========================================
+      # ==============================
+      # Check Node
+      # ==============================
 
       - name: Check Node and NPM
         shell: powershell
         run: |
-          Write-Host "Node version:"
+          Write-Host "Node:"
           node --version
 
-          Write-Host "NPM version:"
+          Write-Host "NPM:"
           npm --version
 
 
-      # ==========================================
-      # 4. Create main.js automatically
-      # ==========================================
+      # ==============================
+      # Create main.js
+      # ==============================
 
-      - name: Create Electron main.js
+      - name: Create main.js
         shell: powershell
         run: |
-          @'
+
+          $mainJs = @'
           const { app, BrowserWindow } = require("electron");
           const path = require("path");
 
@@ -85,7 +86,6 @@ jobs:
               win.loadFile(
                   path.join(__dirname, "index.html")
               );
-
           }
 
 
@@ -95,9 +95,7 @@ jobs:
 
               app.on("activate", () => {
 
-                  if (
-                      BrowserWindow.getAllWindows().length === 0
-                  ) {
+                  if (BrowserWindow.getAllWindows().length === 0) {
                       createWindow();
                   }
 
@@ -113,18 +111,27 @@ jobs:
               }
 
           });
-          '@ | Set-Content -Path "main.js" -Encoding UTF8
-
-          Write-Host "main.js created successfully"
+          '@
 
 
-      # ==========================================
-      # 5. Create package.json automatically
-      # ==========================================
+          [System.IO.File]::WriteAllText(
+              "$PWD\main.js",
+              $mainJs,
+              [System.Text.UTF8Encoding]::new($false)
+          )
 
-           - name: Create package.json
+          Write-Host "main.js created"
+
+
+      # ==============================
+      # Create package.json
+      # UTF-8 WITHOUT BOM
+      # ==============================
+
+      - name: Create package.json
         shell: powershell
         run: |
+
           $packageJson = @'
           {
             "name": "bend-calculator",
@@ -132,23 +139,30 @@ jobs:
             "description": "Sheet Metal Bend Calculator",
             "author": "Shivanov",
             "main": "main.js",
+
             "scripts": {
               "start": "electron .",
               "dist": "electron-builder --win portable"
             },
+
             "devDependencies": {
               "electron": "33.4.11",
               "electron-builder": "25.1.8"
             },
+
             "build": {
               "appId": "com.shivanov.bendcalculator",
+
               "productName": "Bend Calculator",
+
               "asar": true,
+
               "files": [
                 "index.html",
                 "main.js",
                 "package.json"
               ],
+
               "win": {
                 "target": [
                   {
@@ -159,10 +173,12 @@ jobs:
                   }
                 ]
               },
+
               "artifactName": "BendCalculator-Windows-${version}.${ext}"
             }
           }
           '@
+
 
           [System.IO.File]::WriteAllText(
               "$PWD\package.json",
@@ -172,21 +188,38 @@ jobs:
 
           Write-Host "package.json created as UTF-8 without BOM"
 
-          Write-Host "Testing package.json:"
-          Get-Content package.json
 
-          node -e "JSON.parse(require('fs').readFileSync('package.json','utf8')); console.log('package.json VALID')"
+      # ==============================
+      # Validate package.json
+      # ==============================
 
-      # ==========================================
-      # 6. Verify generated project
-      # ==========================================
-
-      - name: Verify project
+      - name: Validate package.json
         shell: powershell
         run: |
-          Write-Host "================================"
+
+          Write-Host "Checking package.json..."
+
+          Get-Content package.json
+
+          node -e "JSON.parse(require('fs').readFileSync('package.json','utf8')); console.log('PACKAGE JSON VALID')"
+
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "ERROR: package.json is invalid"
+              exit 1
+          }
+
+
+      # ==============================
+      # Verify files
+      # ==============================
+
+      - name: Verify project files
+        shell: powershell
+        run: |
+
+          Write-Host "============================"
           Write-Host "PROJECT FILES"
-          Write-Host "================================"
+          Write-Host "============================"
 
           Get-ChildItem
 
@@ -206,46 +239,61 @@ jobs:
           }
 
           Write-Host ""
-          Write-Host "All required files are ready."
+          Write-Host "ALL FILES OK"
 
 
-      # ==========================================
-      # 7. Install Electron
-      # ==========================================
+      # ==============================
+      # Install Electron
+      # ==============================
 
       - name: Install dependencies
         shell: powershell
         run: |
+
           npm install
 
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "npm install failed"
+              exit 1
+          }
 
-      # ==========================================
-      # 8. Build Windows EXE
-      # ==========================================
+
+      # ==============================
+      # Build EXE
+      # ==============================
 
       - name: Build Windows EXE
         shell: powershell
         run: |
+
           npm run dist
 
-
-      # ==========================================
-      # 9. Verify EXE
-      # ==========================================
-
-      - name: Verify Windows EXE
-        shell: powershell
-        run: |
-          Write-Host "================================"
-          Write-Host "BUILD RESULTS"
-          Write-Host "================================"
-
-          if (!(Test-Path "dist")) {
-              Write-Error "ERROR: dist folder was not created"
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "Windows build failed"
               exit 1
           }
 
+
+      # ==============================
+      # Verify EXE
+      # ==============================
+
+      - name: Verify EXE
+        shell: powershell
+        run: |
+
+          Write-Host "============================"
+          Write-Host "BUILD OUTPUT"
+          Write-Host "============================"
+
+          if (!(Test-Path "dist")) {
+              Write-Error "ERROR: dist folder does not exist"
+              exit 1
+          }
+
+
           Get-ChildItem "dist" -Recurse
+
 
           $exeFiles = Get-ChildItem `
               -Path "dist" `
@@ -253,25 +301,39 @@ jobs:
               -File `
               -ErrorAction SilentlyContinue
 
+
           if (!$exeFiles) {
-              Write-Error "ERROR: Windows EXE was not created"
+
+              Write-Error "ERROR: EXE was not created"
+
               exit 1
           }
 
+
           Write-Host ""
-          Write-Host "SUCCESS!"
-          Write-Host ""
+          Write-Host "============================"
+          Write-Host "SUCCESS - EXE CREATED"
+          Write-Host "============================"
+
 
           foreach ($file in $exeFiles) {
-              Write-Host "EXE:"
-              Write-Host $file.FullName
+
               Write-Host ""
+              Write-Host "File:"
+              Write-Host $file.Name
+
+              Write-Host "Size:"
+              Write-Host $file.Length
+
+              Write-Host "Path:"
+              Write-Host $file.FullName
+
           }
 
 
-      # ==========================================
-      # 10. Upload EXE
-      # ==========================================
+      # ==============================
+      # Upload EXE
+      # ==============================
 
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
