@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build Bend Calculator Windows
 
 on:
   workflow_dispatch:
@@ -12,81 +12,268 @@ jobs:
     runs-on: windows-latest
 
     steps:
+
+      # ==========================================
+      # 1. Download repository
+      # ==========================================
+
       - name: Checkout repository
         uses: actions/checkout@v4
+
+
+      # ==========================================
+      # 2. Check index.html
+      # ==========================================
+
+      - name: Check index.html
+        shell: powershell
+        run: |
+          Write-Host "Checking repository files..."
+
+          Get-ChildItem
+
+          if (!(Test-Path "index.html")) {
+              Write-Error "ERROR: index.html was not found in repository root"
+              exit 1
+          }
+
+          Write-Host "SUCCESS: index.html found"
+
+
+      # ==========================================
+      # 3. Check Node / NPM
+      # ==========================================
 
       - name: Check Node and NPM
         shell: powershell
         run: |
-          Write-Host "Checking Node..."
+          Write-Host "Node version:"
           node --version
 
-          Write-Host "Checking NPM..."
+          Write-Host "NPM version:"
           npm --version
 
-      - name: Show repository files
-        shell: powershell
-        run: |
-          Write-Host "Repository contents:"
-          Get-ChildItem -Recurse
 
-      - name: Check required files
+      # ==========================================
+      # 4. Create main.js automatically
+      # ==========================================
+
+      - name: Create Electron main.js
         shell: powershell
         run: |
-          if (!(Test-Path "package.json")) {
-              Write-Error "ERROR: package.json was not found"
+          @'
+          const { app, BrowserWindow } = require("electron");
+          const path = require("path");
+
+          function createWindow() {
+
+              const win = new BrowserWindow({
+                  width: 1280,
+                  height: 850,
+
+                  minWidth: 900,
+                  minHeight: 650,
+
+                  autoHideMenuBar: true,
+
+                  webPreferences: {
+                      contextIsolation: true,
+                      nodeIntegration: false
+                  }
+              });
+
+              win.loadFile(
+                  path.join(__dirname, "index.html")
+              );
+
+          }
+
+
+          app.whenReady().then(() => {
+
+              createWindow();
+
+              app.on("activate", () => {
+
+                  if (
+                      BrowserWindow.getAllWindows().length === 0
+                  ) {
+                      createWindow();
+                  }
+
+              });
+
+          });
+
+
+          app.on("window-all-closed", () => {
+
+              if (process.platform !== "darwin") {
+                  app.quit();
+              }
+
+          });
+          '@ | Set-Content -Path "main.js" -Encoding UTF8
+
+          Write-Host "main.js created successfully"
+
+
+      # ==========================================
+      # 5. Create package.json automatically
+      # ==========================================
+
+      - name: Create package.json
+        shell: powershell
+        run: |
+          @'
+          {
+            "name": "bend-calculator",
+            "version": "4.0.0",
+            "description": "Sheet Metal Bend Calculator",
+            "main": "main.js",
+
+            "scripts": {
+              "start": "electron .",
+              "dist": "electron-builder --win portable"
+            },
+
+            "devDependencies": {
+              "electron": "33.4.11",
+              "electron-builder": "25.1.8"
+            },
+
+            "build": {
+              "appId": "com.shivanov.bendcalculator",
+
+              "productName": "Bend Calculator",
+
+              "asar": true,
+
+              "files": [
+                "index.html",
+                "main.js",
+                "package.json"
+              ],
+
+              "win": {
+                "target": [
+                  {
+                    "target": "portable",
+                    "arch": [
+                      "x64"
+                    ]
+                  }
+                ]
+              },
+
+              "artifactName": "BendCalculator-Windows-${version}.${ext}"
+            }
+          }
+          '@ | Set-Content -Path "package.json" -Encoding UTF8
+
+          Write-Host "package.json created successfully"
+
+
+      # ==========================================
+      # 6. Verify generated project
+      # ==========================================
+
+      - name: Verify project
+        shell: powershell
+        run: |
+          Write-Host "================================"
+          Write-Host "PROJECT FILES"
+          Write-Host "================================"
+
+          Get-ChildItem
+
+          if (!(Test-Path "index.html")) {
+              Write-Error "index.html missing"
               exit 1
           }
 
           if (!(Test-Path "main.js")) {
-              Write-Error "ERROR: main.js was not found"
+              Write-Error "main.js missing"
               exit 1
           }
 
-          if (!(Test-Path "app/index.html")) {
-              Write-Error "ERROR: app/index.html was not found"
+          if (!(Test-Path "package.json")) {
+              Write-Error "package.json missing"
               exit 1
           }
 
-          Write-Host "All required files were found."
+          Write-Host ""
+          Write-Host "All required files are ready."
+
+
+      # ==========================================
+      # 7. Install Electron
+      # ==========================================
 
       - name: Install dependencies
         shell: powershell
         run: |
           npm install
 
+
+      # ==========================================
+      # 8. Build Windows EXE
+      # ==========================================
+
       - name: Build Windows EXE
         shell: powershell
         run: |
           npm run dist
 
-      - name: Check build output
+
+      # ==========================================
+      # 9. Verify EXE
+      # ==========================================
+
+      - name: Verify Windows EXE
         shell: powershell
         run: |
+          Write-Host "================================"
+          Write-Host "BUILD RESULTS"
+          Write-Host "================================"
+
           if (!(Test-Path "dist")) {
               Write-Error "ERROR: dist folder was not created"
               exit 1
           }
 
-          Write-Host "Files inside dist:"
           Get-ChildItem "dist" -Recurse
 
-          $exeFiles = Get-ChildItem "dist" -Filter "*.exe" -File
+          $exeFiles = Get-ChildItem `
+              -Path "dist" `
+              -Filter "*.exe" `
+              -File `
+              -ErrorAction SilentlyContinue
 
-          if ($exeFiles.Count -eq 0) {
-              Write-Error "ERROR: No EXE file was created"
+          if (!$exeFiles) {
+              Write-Error "ERROR: Windows EXE was not created"
               exit 1
           }
 
-          Write-Host "EXE successfully created:"
-          $exeFiles | ForEach-Object {
-              Write-Host $_.FullName
+          Write-Host ""
+          Write-Host "SUCCESS!"
+          Write-Host ""
+
+          foreach ($file in $exeFiles) {
+              Write-Host "EXE:"
+              Write-Host $file.FullName
+              Write-Host ""
           }
+
+
+      # ==========================================
+      # 10. Upload EXE
+      # ==========================================
 
       - name: Upload Windows EXE
         uses: actions/upload-artifact@v4
         with:
-          name: BendCalculator-Windows-EXE
+          name: BendCalculator-Windows
           path: dist/*.exe
           if-no-files-found: error
           retention-days: 30
